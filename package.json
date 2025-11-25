@@ -1,14 +1,18 @@
 {
-    "name": "adlgo-monorepo",
-    "private": true,
-    "workspaces": [
-        "apps/*"
-    ],
-    "scripts": {
-        "build": "npm run build:web -w adlgo-mobile",
-        "build:web": "npm run build:web -w adlgo-mobile"
-    },
-    "engines": {
-        "node": ">=18"
-    }
+  "name": "adlgo-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build:web -w adlgo-mobile",
+    "build:web": "npm run build:web -w adlgo-mobile"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  }
 }

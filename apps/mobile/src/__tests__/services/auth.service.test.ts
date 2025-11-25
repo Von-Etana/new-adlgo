@@ -1,134 +1,83 @@
 import { AuthService } from '../../services/auth.service';
+import api from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Mock supabase
-jest.mock('../../config/supabase', () => ({
-  supabase: {
-    auth: {
-      signInWithOtp: jest.fn(),
-      verifyOtp: jest.fn(),
-      signInWithPassword: jest.fn(),
-      signOut: jest.fn(),
-      getUser: jest.fn(),
-    },
-  },
+// Mock api and AsyncStorage
+jest.mock('../../services/api', () => ({
+  post: jest.fn(),
+  get: jest.fn(),
 }));
 
-import { supabase } from '../../config/supabase';
-
-const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
 
 describe('AuthService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('signInWithPhoneNumber', () => {
-    it('should send OTP successfully', async () => {
-      const mockData = { user: null, session: null };
-      mockSupabase.auth.signInWithOtp.mockResolvedValue({ data: mockData, error: null });
-
-      const result = await AuthService.signInWithPhoneNumber('+1234567890');
-
-      expect(mockSupabase.auth.signInWithOtp).toHaveBeenCalledWith({
-        phone: '+1234567890',
-      });
-      expect(result).toEqual(mockData);
-    });
-
-    it('should throw error on failure', async () => {
-      const mockError = new Error('Invalid phone number');
-      mockSupabase.auth.signInWithOtp.mockResolvedValue({ data: null, error: mockError });
-
-      await expect(AuthService.signInWithPhoneNumber('+1234567890')).rejects.toThrow('Invalid phone number');
-    });
-  });
-
-  describe('confirmCode', () => {
-    it('should verify OTP successfully', async () => {
-      const mockUser = { id: 'user1', phone: '+1234567890' };
-      const mockSession = { access_token: 'token' };
-      mockSupabase.auth.verifyOtp.mockResolvedValue({
-        data: { user: mockUser, session: mockSession },
-        error: null
-      });
-
-      const result = await AuthService.confirmCode('+1234567890', '123456');
-
-      expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
-        phone: '+1234567890',
-        token: '123456',
-        type: 'sms',
-      });
-      expect(result).toEqual({ user: mockUser, session: mockSession });
-    });
-
-    it('should throw error on invalid code', async () => {
-      const mockError = new Error('Invalid code');
-      mockSupabase.auth.verifyOtp.mockResolvedValue({ data: null, error: mockError });
-
-      await expect(AuthService.confirmCode('+1234567890', '123456')).rejects.toThrow('Invalid code');
-    });
-  });
-
   describe('login', () => {
-    it('should login with email and password successfully', async () => {
-      const mockUser = { id: 'user1', email: 'test@example.com' };
-      const mockSession = { access_token: 'token' };
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser, session: mockSession },
-        error: null
-      });
+    it('should login successfully and store token', async () => {
+      const mockResponse = {
+        data: {
+          token: 'mock-token',
+          user: { id: 'user1', phone: '1234567890' },
+        },
+      };
+      (api.post as jest.Mock).mockResolvedValue(mockResponse);
 
-      const result = await AuthService.login('test@example.com', 'password');
+      const result = await AuthService.login('1234567890', 'password');
 
-      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password',
-      });
-      expect(result).toEqual({ user: mockUser, session: mockSession });
+      expect(api.post).toHaveBeenCalledWith('/auth/login', { phone: '1234567890', password: 'password' });
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('token', 'mock-token');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockResponse.data.user));
+      expect(result).toEqual(mockResponse.data);
     });
 
     it('should throw error on login failure', async () => {
       const mockError = new Error('Invalid credentials');
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: null, error: mockError });
+      (api.post as jest.Mock).mockRejectedValue(mockError);
 
-      await expect(AuthService.login('test@example.com', 'wrong')).rejects.toThrow('Invalid credentials');
+      await expect(AuthService.login('1234567890', 'wrong')).rejects.toThrow('Invalid credentials');
+    });
+  });
+
+  describe('register', () => {
+    it('should register successfully', async () => {
+      const mockResponse = { data: { id: 'user1', phone: '1234567890' } };
+      (api.post as jest.Mock).mockResolvedValue(mockResponse);
+
+      const data = { phone: '1234567890', fullName: 'John Doe', password: 'password' };
+      const result = await AuthService.register(data);
+
+      expect(api.post).toHaveBeenCalledWith('/auth/register', data);
+      expect(result).toEqual(mockResponse.data);
     });
   });
 
   describe('logout', () => {
-    it('should logout successfully', async () => {
-      mockSupabase.auth.signOut.mockResolvedValue({ error: null });
-
-      await expect(AuthService.logout()).resolves.toBeUndefined();
-
-      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
-    });
-
-    it('should throw error on logout failure', async () => {
-      const mockError = new Error('Logout failed');
-      mockSupabase.auth.signOut.mockResolvedValue({ error: mockError });
-
-      await expect(AuthService.logout()).rejects.toThrow('Logout failed');
+    it('should remove token and user from storage', async () => {
+      await AuthService.logout();
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('user');
     });
   });
 
-  describe('getCurrentUser', () => {
-    it('should return current user', async () => {
-      const mockUser = { id: 'user1', email: 'test@example.com' };
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+  describe('getUser', () => {
+    it('should return user from storage', async () => {
+      const mockUser = { id: 'user1', phone: '1234567890' };
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(mockUser));
 
-      const result = await AuthService.getCurrentUser();
-
+      const result = await AuthService.getUser();
       expect(result).toEqual(mockUser);
-      expect(mockSupabase.auth.getUser).toHaveBeenCalled();
     });
 
-    it('should return null if no user', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
-
-      const result = await AuthService.getCurrentUser();
-
+    it('should return null if no user in storage', async () => {
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+      const result = await AuthService.getUser();
       expect(result).toBeNull();
     });
   });

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
 
 // Use 10.0.2.2 for Android Emulator, localhost for iOS Simulator
 const BASE_URL = Platform.OS === 'android'
@@ -13,8 +15,6 @@ const api = axios.create({
     },
 });
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 // Add interceptor for Auth Token
 api.interceptors.request.use(
     async (config) => {
@@ -24,13 +24,13 @@ api.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${token}`;
             }
         } catch (error) {
-            console.error('Error retrieving token:', error);
+            logger.error('Error retrieving token:', error);
             // Proceed without token or handle error as needed
         }
         return config;
     },
     (error) => {
-        console.error('API Request Error:', error);
+        logger.error('API Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -51,7 +51,8 @@ api.interceptors.response.use(
 
         const delayRetryRequest = new Promise<void>((resolve) => {
             setTimeout(() => {
-                // console.log('Retrying request', config.url);
+                // Commented out for production
+                // logger.debug('Retrying request', config.url);
                 resolve();
             }, config.retryDelay || 1000);
         });

@@ -74,13 +74,42 @@ const DriverTabs = () => (
     </Tab.Navigator>
 );
 
-const RootNavigator = () => {
-    // In a real app, this state comes from Zustand
-    const [userMode, setUserMode] = useState<'customer' | 'driver'>('customer');
-    const [isDriverVerified, setIsDriverVerified] = useState(true); // Toggle to test KYC
+// Auth Screens
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import { useAuth } from '../context/AuthContext';
 
-    if (userMode === 'driver' && !isDriverVerified) {
-        return <DriverKYCScreen navigation={{ replace: () => setIsDriverVerified(true) }} />;
+// Auth Stack
+const AuthStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+);
+
+// Driver Stack
+const DriverStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="DriverKYC">
+        <Stack.Screen name="DriverKYC" component={DriverKYCScreen} />
+        <Stack.Screen name="DriverHome" component={DriverTabs} />
+    </Stack.Navigator>
+);
+
+const RootNavigator = () => {
+    const { user, loading } = useAuth();
+    // In a real app, this state comes from Zustand or Context
+    const [userMode, setUserMode] = useState<'customer' | 'driver'>('customer');
+
+    if (loading) {
+        return <PlaceholderScreen name="Loading..." />;
+    }
+
+    if (!user) {
+        return (
+            <NavigationContainer>
+                <AuthStack />
+            </NavigationContainer>
+        );
     }
 
     return (
@@ -92,7 +121,7 @@ const RootNavigator = () => {
                 </View>
 
                 {/* Conditional Navigation Stack */}
-                {userMode === 'customer' ? <CustomerTabs /> : <DriverTabs />}
+                {userMode === 'customer' ? <CustomerTabs /> : <DriverStack />}
             </View>
         </NavigationContainer>
     );

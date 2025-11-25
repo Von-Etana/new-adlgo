@@ -13,4 +13,8 @@ export type RootStackParamList = {
     WalletMain: undefined;
     'Go Online': undefined;
     Earnings: undefined;
+    Login: undefined;
+    Register: undefined;
+    DriverKYC: undefined;
+    DriverHome: undefined;
 };

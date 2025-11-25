@@ -12,7 +12,7 @@ export class Transaction {
     @Column({ type: 'enum', enum: ['credit', 'debit'] })
     type: 'credit' | 'debit';
 
-    @Column({ type: 'enum', enum: ['deposit', 'withdrawal', 'payment', 'commission'] })
+    @Column({ type: 'enum', enum: ['deposit', 'withdrawal', 'payment', 'commission', 'earnings', 'bill_payment'] })
     category: string;
 
     @Column({ nullable: true })

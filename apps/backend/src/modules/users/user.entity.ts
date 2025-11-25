@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, CreateDateColumn, Index } from 'typeorm';
 import { Wallet } from '../wallet/wallet.entity';
 
 @Entity()
@@ -7,6 +7,7 @@ export class User {
     id: string;
 
     @Column({ unique: true })
+    @Index()
     phone: string;
 
     @Column({ nullable: true })
@@ -15,7 +16,11 @@ export class User {
     @Column({ nullable: true })
     email: string;
 
+    @Column({ select: false, nullable: true }) // Select false to hide by default
+    password: string;
+
     @Column({ type: 'enum', enum: ['customer', 'driver', 'admin'], default: 'customer' })
+    @Index()
     role: string;
 
     // Driver specific fields

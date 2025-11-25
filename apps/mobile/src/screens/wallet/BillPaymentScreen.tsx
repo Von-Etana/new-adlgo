@@ -11,8 +11,10 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { WalletService } from '../../services/wallet.service';
+import { RootStackParamList } from '../../types';
+import { validateAmount, validateMeterNumber } from '../../utils/validation';
 
 const BILL_CATEGORIES = [
     { id: 'airtime', name: 'Airtime', icon: '📱' },
@@ -49,7 +51,7 @@ const PROVIDERS = {
 
 const BillPaymentScreen = () => {
     const navigation = useNavigation();
-    const route = useRoute<any>();
+    const route = useRoute<RouteProp<RootStackParamList, 'BillPayment'>>();
 
     // Default to airtime if no param passed, or use the provider passed from WalletScreen
     const initialProvider = route.params?.provider;
@@ -61,8 +63,30 @@ const BillPaymentScreen = () => {
     const [loading, setLoading] = useState(false);
 
     const handlePay = async () => {
-        if (!selectedProvider || !identifier || !amount) {
-            Alert.alert('Error', 'Please fill all fields');
+        // Validate inputs
+        if (!selectedProvider) {
+            Alert.alert('Error', 'Please select a provider');
+            return;
+        }
+
+        if (!identifier || identifier.trim().length === 0) {
+            Alert.alert('Error', 'Please enter phone/meter number');
+            return;
+        }
+
+        // Validate meter number for electricity/cable TV
+        if (['electricity', 'cable'].includes(selectedCategory.id)) {
+            const meterValidation = validateMeterNumber(identifier);
+            if (!meterValidation.isValid) {
+                Alert.alert('Invalid Number', meterValidation.error);
+                return;
+            }
+        }
+
+        // Validate amount
+        const amountValidation = validateAmount(amount);
+        if (!amountValidation.isValid) {
+            Alert.alert('Invalid Amount', amountValidation.error);
             return;
         }
 
@@ -70,7 +94,6 @@ const BillPaymentScreen = () => {
         try {
             // Call Backend API
             const result = await WalletService.payBill(
-                'user_123', // Mock User ID
                 selectedProvider.id,
                 identifier,
                 parseFloat(amount)

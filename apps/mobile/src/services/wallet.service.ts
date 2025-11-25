@@ -15,23 +15,23 @@ export interface WalletData {
 }
 
 export const WalletService = {
-    getBalance: async (userId: string): Promise<WalletData> => {
-        const response = await api.get(`/wallet/${userId}/balance`);
+    getBalance: async (): Promise<WalletData> => {
+        const response = await api.get(`/wallet/balance`);
         return response.data;
     },
 
-    getTransactions: async (userId: string): Promise<Transaction[]> => {
-        const response = await api.get(`/wallet/${userId}/transactions`);
+    getTransactions: async (): Promise<Transaction[]> => {
+        const response = await api.get(`/wallet/transactions`);
         return response.data;
     },
 
-    fundWallet: async (userId: string, amount: number, reference: string) => {
-        const response = await api.post('/wallet/fund', { userId, amount, reference });
+    fundWallet: async (amount: number, reference: string) => {
+        const response = await api.post('/wallet/fund', { amount, reference });
         return response.data;
     },
 
-    payBill: async (userId: string, provider: string, identifier: string, amount: number) => {
-        const response = await api.post('/wallet/bill-payment', { userId, provider, identifier, amount });
+    payBill: async (provider: string, identifier: string, amount: number) => {
+        const response = await api.post('/wallet/bill-payment', { provider, identifier, amount });
         return response.data;
     },
 };

@@ -1,60 +1,27 @@
-import { supabase } from '../config/supabase';
+import api from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AuthService = {
-    // Phone Auth Step 1: Send OTP
-    signInWithPhoneNumber: async (phoneNumber: string) => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOtp({
-                phone: phoneNumber,
-            });
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Phone Auth Error:', error);
-            throw error;
-        }
+    login: async (phone: string, password?: string) => {
+        const response = await api.post('/auth/login', { phone, password });
+        const { token, user } = response.data;
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        return { token, user };
     },
 
-    // Phone Auth Step 2: Verify OTP
-    confirmCode: async (phoneNumber: string, code: string) => {
-        try {
-            const { data, error } = await supabase.auth.verifyOtp({
-                phone: phoneNumber,
-                token: code,
-                type: 'sms',
-            });
-            if (error) throw error;
-            return { user: data.user, session: data.session };
-        } catch (error) {
-            console.error('OTP Verification Error:', error);
-            throw error;
-        }
+    register: async (data: { phone: string; password?: string; fullName?: string; role?: string }) => {
+        const response = await api.post('/auth/register', data);
+        return response.data;
     },
 
-    // Email/Password Login (Alternative)
-    login: async (email: string, pass: string) => {
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: pass,
-            });
-            if (error) throw error;
-            return { user: data.user, session: data.session };
-        } catch (error) {
-            console.error('Login Error:', error);
-            throw error;
-        }
-    },
-
-    // Sign Out
     logout: async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
     },
 
-    // Get Current User
-    getCurrentUser: async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        return user;
-    },
+    getUser: async () => {
+        const userStr = await AsyncStorage.getItem('user');
+        return userStr ? JSON.parse(userStr) : null;
+    }
 };

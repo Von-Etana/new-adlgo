@@ -1,8 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
+    private readonly logger = new Logger(FirebaseService.name);
+
     onModuleInit() {
         if (!admin.apps.length) {
             // In production, use process.env.FIREBASE_CREDENTIALS
@@ -12,9 +14,9 @@ export class FirebaseService implements OnModuleInit {
                     credential: admin.credential.applicationDefault(),
                     // databaseURL: "https://your-project.firebaseio.com"
                 });
-                console.log('Firebase Admin Initialized');
+                this.logger.log('Firebase Admin initialized successfully');
             } catch (error) {
-                console.warn('Firebase Admin Init Failed (Expected if no creds provided):', error.message);
+                this.logger.warn(`Firebase Admin initialization failed (expected if no credentials provided): ${error.message}`);
             }
         }
     }

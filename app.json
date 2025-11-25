@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "c40e7995-252b-45ce-95ee-e13e31034c86"
+      }
+    },
+    "owner": "adlgo-app",
+    "android": {
+      "package": "com.adlgoapp.adlgomonorepo"
+    }
+  }
+}

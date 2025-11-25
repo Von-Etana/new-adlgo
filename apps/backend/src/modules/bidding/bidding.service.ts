@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { CreateOrderDto, CreateBidDto, AcceptBidDto } from '../../common/dto';
 
 @Injectable()
 export class BiddingService {
@@ -7,7 +8,7 @@ export class BiddingService {
     private orders = new Map();
     private bids = new Map();
 
-    async createOrder(data: any) {
+    async createOrder(data: CreateOrderDto) {
         const order = {
             id: uuidv4(),
             ...data,
@@ -19,7 +20,7 @@ export class BiddingService {
         return order;
     }
 
-    async placeBid(data: { orderId: string; driverId: string; amount: number }) {
+    async placeBid(data: CreateBidDto) {
         const bid = {
             id: uuidv4(),
             ...data,
@@ -43,7 +44,7 @@ export class BiddingService {
         return bid;
     }
 
-    async acceptBid(data: { orderId: string; bidId: string; driverId: string }) {
+    async acceptBid(data: AcceptBidDto) {
         const order = this.orders.get(data.orderId);
         if (!order) throw new Error('Order not found');
 

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, OneToMany, CreateDateColumn, Index } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Bid } from '../bidding/bid.entity';
 
@@ -32,6 +32,7 @@ export class Order {
     finalPrice: number;
 
     @Column({ type: 'enum', enum: ['pending', 'bidding', 'accepted', 'in_transit', 'delivered', 'cancelled'], default: 'pending' })
+    @Index()
     status: string;
 
     @Column({ nullable: true })

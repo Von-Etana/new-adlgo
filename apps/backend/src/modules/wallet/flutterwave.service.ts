@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { configuration } from '../../config/configuration';
+import { CreatePaymentDto } from '../../common/dto';
 
 @Injectable()
 export class FlutterwaveService {
@@ -40,7 +41,7 @@ export class FlutterwaveService {
         }
     }
 
-    async createPayment(payload: any) {
+    async createPayment(payload: CreatePaymentDto) {
         try {
             const response = await axios.post(`${this.baseUrl}/bills`, payload, {
                 headers: this.headers,
@@ -52,3 +53,4 @@ export class FlutterwaveService {
         }
     }
 }
+

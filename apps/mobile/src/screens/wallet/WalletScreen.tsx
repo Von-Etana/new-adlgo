@@ -26,11 +26,6 @@ const WalletScreen = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Mock User ID
-    const USER_ID = 'user_123';
-
-
-
     useEffect(() => {
         fetchWalletData();
     }, []);
@@ -39,8 +34,8 @@ const WalletScreen = () => {
         try {
             setLoading(true);
             const [balanceData, txData] = await Promise.all([
-                WalletService.getBalance(USER_ID),
-                WalletService.getTransactions(USER_ID),
+                WalletService.getBalance(),
+                WalletService.getTransactions(),
             ]);
             setWalletData(balanceData);
             setTransactions(txData);
@@ -56,7 +51,7 @@ const WalletScreen = () => {
         try {
             // In real app: Launch Paystack/Flutterwave SDK here
             // On success:
-            await WalletService.fundWallet(USER_ID, 5000, 'ref_mock_' + Date.now());
+            await WalletService.fundWallet(5000, 'ref_mock_' + Date.now());
             showToast('Wallet funded successfully!', 'success');
             fetchWalletData(); // Refresh
         } catch (error) {

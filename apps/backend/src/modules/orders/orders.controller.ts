@@ -1,12 +1,13 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { BiddingService } from '../bidding/bidding.service';
+import { CreateOrderDto } from '../../common/dto';
 
 @Controller('orders')
 export class OrdersController {
     constructor(private readonly biddingService: BiddingService) { }
 
     @Post()
-    async createOrder(@Body() createOrderDto: any) {
+    async createOrder(@Body() createOrderDto: CreateOrderDto) {
         // Reuse the bidding service logic to create an order
         return this.biddingService.createOrder(createOrderDto);
     }
